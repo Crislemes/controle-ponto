@@ -355,7 +355,7 @@ function gerarPDF() {
     return;
   }
 
-  const nome = localStorage.getItem('nomeUsuario') || document.getElementById('nomeUsuario').value || '';
+  const nome = localStorage.getItem('nomeUsuario') || document.getElementById('nomeUsuario').value || 'Alessandro da Silva Ferreira';
   const mesRef = document.getElementById('mesRelatorio').value; // formato YYYY-MM
   if (!mesRef) {
     alert('Selecione o mês do relatório.');
