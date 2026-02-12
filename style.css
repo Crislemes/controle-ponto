@@ -1,0 +1,186 @@
+/* ===============================================
+   Controle de Horas - Refatorado (Protótipo High-Fi)
+   =============================================== */
+
+:root {
+  /* Cores Exatas do Protótipo */
+  --bg-page: #F8F9FA;
+  --bg-card: #FFFFFF;
+  --text-main: #1A202C;
+  --text-label: #718096;
+  --border: #E2E8F0;
+  
+  --primary-blue: #004A99;
+  --success-green: #2D8A56;
+  --error-red: #D32F2F;
+  --warning-orange: #ED8936;
+  
+  --shadow-soft: 0px 4px 12px rgba(0, 0, 0, 0.05);
+  --font-family: 'Inter', -apple-system, system-ui, sans-serif;
+}
+
+/* Reset Base */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  padding: 16px;
+  background-color: var(--bg-page);
+  font-family: var(--font-family);
+  color: var(--text-main);
+}
+
+/* Título Centralizado */
+h1 {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  margin: 20px 0;
+  color: #2D3748;
+}
+
+/* Estilo de Card Global */
+.form-card, .resumo, .registro-item {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 16px;
+}
+
+/* Labels e Inputs */
+label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-label);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--text-main);
+  background-color: #FFF;
+  margin-bottom: 12px;
+}
+
+/* Input Row (Lado a Lado) */
+.input-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.input-row div { flex: 1; }
+
+/* Botão Salvar (Alinhado à direita conforme protótipo) */
+#btnSalvar {
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-weight: 600;
+  float: right;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Resumo Mensal */
+.resumo {
+  display: flex;
+  flex-direction: column;
+}
+
+.resumo-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.totals-container {
+  display: flex;
+  border-top: 1px solid var(--border);
+  padding-top: 15px;
+}
+
+.total-item {
+  flex: 1;
+  text-align: left;
+  padding-left: 10px;
+}
+
+.total-item:last-child {
+  border-left: 1px solid var(--border);
+}
+
+.value-positive { color: var(--success-green); font-weight: 700; }
+.value-negative { color: var(--error-red); font-weight: 700; }
+
+/* Lista de Registros */
+.registro-item {
+  position: relative;
+  padding: 15px;
+}
+
+.reg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.action-delete {
+  background-color: var(--warning-orange);
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.reg-label { color: var(--text-label); }
+.reg-val { font-weight: 600; }
+
+/* Botões de Ação Final (Full Width) */
+.actions-footer {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#btnPDF {
+  background-color: var(--success-green);
+  color: white;
+  height: 48px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  width: 100%;
+}
+
+#btnLimpar {
+  background-color: var(--error-red);
+  color: white;
+  height: 48px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  width: 100%;
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Horas</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#004A99">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>Controle de Horas</h1>
+
+    <div class="form-card">
+      <label for="nomeUsuario">Nome</label>
+      <input type="text" id="nomeUsuario" placeholder="Alessandro" />
+
+      <label for="mesRelatorio">Mês do relatório</label>
+      <input type="month" id="mesRelatorio" />
+    </div>
+
+    <div class="form-card">
+      <label for="data">Data</label>
+      <input type="date" id="data">
+
+      <div class="input-row">
+        <div>
+          <label for="entrada">Hora de Entrada</label>
+          <input type="time" id="entrada">
+        </div>
+        <div>
+          <label for="saida">Hora de Saída</label>
+          <input type="time" id="saida">
+        </div>
+      </div>
+
+      <label for="observacao">Observações</label>
+      <input type="text" id="observacao" placeholder="Ex: Hora extra">
+
+      <div style="overflow: hidden; width: 100%;">
+        <button id="btnSalvar">💾 Salvar</button>
+        <button id="btnCancelar" style="display: none;">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="resumo">
+      <div class="resumo-header">
+        <span>💼</span> Resumo Mensal
+      </div>
+      <div class="totals-container">
+        <div class="total-item">
+          <span class="reg-label">Total Trabalhado</span>
+          <div id="totalHoras" class="value-positive">9:00 horas</div>
+        </div>
+        <div class="total-item">
+          <span class="reg-label">Total de Extras</span>
+          <div id="totalExtras" class="value-negative">-0.80 horas</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="listaRegistros" class="lista-container">
+      <h2 style="margin-left: 10px; font-size: 18px;">Registros</h2>
+      
+      <div class="registro-item">
+        <div class="reg-header">
+          <span class="reg-val">12/02/2026</span>
+          <button class="action-delete">Excluir</button>
+        </div>
+        <div class="reg-grid">
+          <div><span class="reg-label">Entrada</span></div>
+          <div><span class="reg-label">Saída</span></div>
+          <div><span class="reg-val">08:00</span></div>
+          <div><span class="reg-val">17:00</span></div>
+          
+          <div><span class="reg-label">Total</span></div>
+          <div><span class="reg-label">Extras</span></div>
+          <div><span class="reg-val">9:00h</span></div>
+          <div><span class="reg-val value-negative">-0.80h</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-footer">
+      <button id="btnPDF">📄 Gerar PDF</button>
+      <button id="btnLimpar">🗑️ Limpar registros</button>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
