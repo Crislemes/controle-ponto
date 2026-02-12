@@ -5,20 +5,20 @@
 let useFirebase = false;
 
 // Verificar se Firebase está disponível
-window.addEventListener('load', async () => {
-  if (typeof firebase !== 'undefined' && firebase.firestore) {
-    try {
-      // Testar conexão com Firestore
-      const User = "Alessandro da Silva Ferreira";
-      const testRef = firebase.firestore().collection("usuarios").doc(User);
-      await testRef.get();
-      useFirebase = true;
-      console.log("✅ Firebase conectado com sucesso!");
-    } catch (error) {
-      console.warn("⚠️ Firebase não disponível, usando LocalStorage:", error.message);
-      useFirebase = false;
-    }
+function verificarFirebase() {
+  if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+    useFirebase = true;
+    console.log("✅ Firebase conectado com sucesso!");
+    return true;
   }
+  return false;
+}
+
+// Verificar quando página carrega
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    verificarFirebase();
+  }, 1000);
 });
 
 // Sobrescrever localStorage.getItem para ler do Firebase

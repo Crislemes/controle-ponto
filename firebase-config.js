@@ -14,16 +14,53 @@ const firebaseConfig = {
   measurementId: "G-JP153B465X"
 };
 
-// Inicializa Firebase
-firebase.initializeApp(firebaseConfig);
+// Função para inicializar Firebase (chamada quando CDN estiver pronto)
+function inicializarFirebase() {
+  if (typeof firebase === 'undefined') {
+    console.error("❌ Firebase SDK não foi carregado. Verifique os scripts.");
+    return false;
+  }
 
-// Obtém referência ao Firestore
-const db = firebase.firestore();
+  if (firebase.apps.length === 0) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase inicializado com sucesso!");
+  }
+  
+  window.db = firebase.firestore();
+  return true;
+}
+
+// Tentar inicializar quando o documento carregar
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    if (!inicializarFirebase()) {
+      console.warn("⚠️ Firebase não disponível. Usando LocalStorage apenas.");
+    }
+  }, 500);
+});
+
+// Fallback: tentar inicializar após 2 segundos se ainda não fez
+setTimeout(() => {
+  if (typeof window.db === 'undefined') {
+    inicializarFirebase();
+  }
+}, 2000);
 
 // ===== FUNÇÕES AUXILIARES FIREBASE =====
 
+// Função helper para obter referência ao Firestore
+function getDB() {
+  return window.db || null;
+}
+
 // Salvar registros no Firestore
 async function salvarRegistrosFirebase(registros) {
+  const db = getDB();
+  if (!db) {
+    console.warn("⚠️ Firestore não disponível");
+    return;
+  }
+
   try {
     const User = "Alessandro da Silva Ferreira"; // ID do usuário (pode ser dinâmico)
     await db.collection("usuarios").doc(User).set(
@@ -42,6 +79,12 @@ async function salvarRegistrosFirebase(registros) {
 
 // Carregar registros do Firestore
 async function carregarRegistrosFirebase() {
+  const db = getDB();
+  if (!db) {
+    console.warn("⚠️ Firestore não disponível");
+    return [];
+  }
+
   try {
     const User = "Alessandro da Silva Ferreira";
     const docSnap = await db.collection("usuarios").doc(User).get();
@@ -62,6 +105,12 @@ async function carregarRegistrosFirebase() {
 
 // Deletar um registro no Firestore
 async function deletarRegistroFirebase(indice) {
+  const db = getDB();
+  if (!db) {
+    console.warn("⚠️ Firestore não disponível");
+    return;
+  }
+
   try {
     const User = "Alessandro da Silva Ferreira";
     const docSnap = await db.collection("usuarios").doc(User).get();
@@ -83,6 +132,12 @@ async function deletarRegistroFirebase(indice) {
 
 // Sincronizar em tempo real (listener)
 function sincronizarRegistrosEmTempoReal(callback) {
+  const db = getDB();
+  if (!db) {
+    console.warn("⚠️ Firestore não disponível para sincronização");
+    return;
+  }
+
   try {
     const User = "Alessandro da Silva Ferreira";
     db.collection("usuarios").doc(User).onSnapshot((docSnap) => {
