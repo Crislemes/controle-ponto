@@ -78,11 +78,31 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('btnPDF').addEventListener('click', gerarPDF);
   document.getElementById('btnLimpar').addEventListener('click', limparRegistros);
   document.getElementById('nomeUsuario').addEventListener('change', salvarNomeUsuario);
+  
+  // REGRA 3: Atualizar registros quando o mês selecionado for alterado
+  document.getElementById('mesRelatorio').addEventListener('change', () => {
+    atualizarTabela();
+    atualizarTotal();
+  });
 });
 
 function salvarNomeUsuario(e) {
   const nome = e.target.value.trim();
   localStorage.setItem('nomeUsuario', nome);
+}
+
+// === Funções helpers para filtrar registros por mês ===
+function obterMesSelecionado() {
+  return document.getElementById('mesRelatorio').value; // formato YYYY-MM
+}
+
+function filtrarRegistrosPorMes(mes) {
+  if (!mes) return registros;
+  const [ano, mesNum] = mes.split('-').map(Number);
+  return registros.filter(r => {
+    const d = new Date(r.data + 'T00:00:00');
+    return d.getFullYear() === ano && (d.getMonth() + 1) === mesNum;
+  });
 }
 
 function salvarRegistro() {
@@ -185,9 +205,29 @@ function atualizarTabela() {
   const listaContainer = document.getElementById("listaRegistros");
   if (tabelaAntiga) tabelaAntiga.innerHTML = "";
   if (listaContainer) listaContainer.querySelectorAll('.registro-item').forEach(n=>n.remove());
+  if (listaContainer) {
+    const msgVazia = listaContainer.querySelector('.msg-vazia');
+    if (msgVazia) msgVazia.remove();
+  }
+
+  // Filtrar registros pelo mês selecionado (REGRA 2 e 3)
+  const mesSelecionado = obterMesSelecionado();
+  const registrosFiltrados = filtrarRegistrosPorMes(mesSelecionado);
+
+  // Mostrar mensagem se não há registros (REGRA 4)
+  if (registrosFiltrados.length === 0) {
+    if (listaContainer) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg-vazia';
+      msgDiv.style.cssText = 'padding: 20px; text-align: center; color: #999; font-style: italic;';
+      msgDiv.textContent = 'Esse mês não possui registros';
+      listaContainer.appendChild(msgDiv);
+    }
+    return;
+  }
 
   // Ordena por data desc
-  const cop = [...registros].sort((a, b) => (a.data < b.data ? 1 : -1));
+  const cop = [...registrosFiltrados].sort((a, b) => (a.data < b.data ? 1 : -1));
 
   cop.forEach((r, idx) => {
     // Encontrar índice original no array registros
@@ -256,9 +296,13 @@ function atualizarTabela() {
 }
 
 function atualizarTotal() {
-  const totalMinutos = registros.reduce((soma, r) => soma + (r.totalMinutos || 0), 0);
-  const totalSemAlmoco = registros.reduce((soma, r) => soma + calcularTotalSemAlmoco(r.totalMinutos || 0), 0);
-  const totalExtrasMinutos = registros.reduce((soma, r) => soma + (r.extrasMinutos || 0), 0);
+  // Filtrar registros pelo mês selecionado (REGRA 2 e 3)
+  const mesSelecionado = obterMesSelecionado();
+  const registrosMes = filtrarRegistrosPorMes(mesSelecionado);
+
+  const totalMinutos = registrosMes.reduce((soma, r) => soma + (r.totalMinutos || 0), 0);
+  const totalSemAlmoco = registrosMes.reduce((soma, r) => soma + calcularTotalSemAlmoco(r.totalMinutos || 0), 0);
+  const totalExtrasMinutos = registrosMes.reduce((soma, r) => soma + (r.extrasMinutos || 0), 0);
   
   const totalFormatado = formatarMinutosComNome(totalSemAlmoco);
   const totalExtrasFormatado = formatarMinutosComNome(totalExtrasMinutos);
@@ -288,9 +332,19 @@ function atualizarTotal() {
 }
 
 function limparRegistros() {
-  if (!confirm('Deseja apagar TODOS os registros?')) return;
-  registros = [];
-  localStorage.removeItem('registros');
+  const mesSelecionado = obterMesSelecionado();
+  const [ano, mesNum] = mesSelecionado.split('-').map(Number);
+  
+  const confirmMsg = `Deseja apagar todos os registros de ${String(mesNum).padStart(2, '0')}/${ano}?`;
+  if (!confirm(confirmMsg)) return;
+  
+  // REGRA 1: Deletar apenas registros do mês selecionado
+  registros = registros.filter(r => {
+    const d = new Date(r.data + 'T00:00:00');
+    return !(d.getFullYear() === ano && (d.getMonth() + 1) === mesNum);
+  });
+  
+  localStorage.setItem('registros', JSON.stringify(registros));
   atualizarTabela();
   atualizarTotal();
 }
