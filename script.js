@@ -8,6 +8,9 @@ const JORNADA_PADRAO = {
   minutos: 588       // Total: 9h 48min = 588 minutos
 };
 
+// === Desconto automático de almoço ===
+const ALMOCO_MINUTOS = 60; // 1 hora de almoço descontada diariamente
+
 // === Função auxiliar: converter HH:MM para minutos ===
 function converterParaMinutos(hhmm) {
   const [h, m] = hhmm.split(":").map(Number);
@@ -171,6 +174,11 @@ function formatarDataISOparaBr(iso) {
   return d.toLocaleDateString('pt-BR');
 }
 
+// Função auxiliar: calcular total sem desconto de almoço
+function calcularTotalSemAlmoco(totalMinutos) {
+  return Math.max(0, totalMinutos - ALMOCO_MINUTOS);
+}
+
 function atualizarTabela() {
   // Suporta duas estruturas: tabela antiga (`tabelaRegistros`) ou novo container (`listaRegistros`)
   const tabelaAntiga = document.getElementById("tabelaRegistros");
@@ -188,6 +196,7 @@ function atualizarTabela() {
     );
 
     const totalFormatado = formatarMinutosComNome(r.totalMinutos);
+    const totalSemAlmocoFormatado = formatarMinutosComNome(calcularTotalSemAlmoco(r.totalMinutos));
     const extrasFormatado = formatarMinutosComNome(r.extrasMinutos);
     const extrasComSinal = r.extrasMinutos > 0 ? '+' + extrasFormatado : extrasFormatado;
 
@@ -220,7 +229,7 @@ function atualizarTabela() {
           <div><span class="reg-val">${r.saida}</span></div>
           <div><span class="reg-label">Total</span></div>
           <div><span class="reg-label">Extras</span></div>
-          <div><span class="reg-val">${totalFormatado}</span></div>
+          <div><span class="reg-val">${totalSemAlmocoFormatado}</span></div>
           <div><span class="reg-val ${r.extrasMinutos>0?"value-positive":"value-negative"}">${extrasComSinal}</span></div>
         </div>
       `;
@@ -234,7 +243,7 @@ function atualizarTabela() {
         <td>${formatarDataISOparaBr(r.data)}</td>
         <td>${r.entrada}</td>
         <td>${r.saida}</td>
-        <td>${totalFormatado}</td>
+        <td>${totalSemAlmocoFormatado}</td>
         <td>${extrasComSinal}</td>
         <td>
           <button class="action-edit" data-index="${origIndex}" title="Editar">✏️</button>
@@ -248,9 +257,10 @@ function atualizarTabela() {
 
 function atualizarTotal() {
   const totalMinutos = registros.reduce((soma, r) => soma + (r.totalMinutos || 0), 0);
+  const totalSemAlmoco = registros.reduce((soma, r) => soma + calcularTotalSemAlmoco(r.totalMinutos || 0), 0);
   const totalExtrasMinutos = registros.reduce((soma, r) => soma + (r.extrasMinutos || 0), 0);
   
-  const totalFormatado = formatarMinutosComNome(totalMinutos);
+  const totalFormatado = formatarMinutosComNome(totalSemAlmoco);
   const totalExtrasFormatado = formatarMinutosComNome(totalExtrasMinutos);
   const totalExtrasComSinal = totalExtrasMinutos > 0 ? '+' + totalExtrasFormatado : totalExtrasFormatado;
   
@@ -389,9 +399,10 @@ function gerarPDF() {
         y = margin;
       }
       const totalFormatado = formatarMinutosComNome(r.totalMinutos);
+      const totalSemAlmocoFormatado = formatarMinutosComNome(calcularTotalSemAlmoco(r.totalMinutos));
       const extrasFormatado = formatarMinutosComNome(r.extrasMinutos);
       const extrasComSinal = r.extrasMinutos > 0 ? '+' + extrasFormatado : extrasFormatado;
-      const linha = `${formatarDataISOparaBr(r.data)} - ${r.entrada} às ${r.saida} — ${totalFormatado} (extras: ${extrasComSinal})${r.observacao ? ' — ' + r.observacao : ''}`;
+      const linha = `${formatarDataISOparaBr(r.data)} - ${r.entrada} às ${r.saida} — ${totalFormatado} (menos almoço: ${totalSemAlmocoFormatado}, extras: ${extrasComSinal})${r.observacao ? ' — ' + r.observacao : ''}`;
       doc.text(linha, margin, y);
       y += 14;
     });
@@ -400,9 +411,12 @@ function gerarPDF() {
   y += 10;
   doc.setFontSize(12);
   const totalFormatado = formatarMinutosComNome(totalMinutos);
+  const totalSemAlmocoFormatado = formatarMinutosComNome(registrosMes.reduce((s, r) => s + calcularTotalSemAlmoco(r.totalMinutos || 0), 0));
   const totalExtrasFormatado = formatarMinutosComNome(totalExtrasMinutos);
   const totalExtrasComSinal = totalExtrasMinutos > 0 ? '+' + totalExtrasFormatado : totalExtrasFormatado;
-  doc.text(`Total trabalhado no mês: ${totalFormatado}`, margin, y);
+  doc.text(`Total bruto no mês: ${totalFormatado}`, margin, y);
+  y += 15;
+  doc.text(`Total com desconto de almoço: ${totalSemAlmocoFormatado}`, margin, y);
   y += 15;
   doc.text(`Total de extras no mês: ${totalExtrasComSinal}`, margin, y);
 
