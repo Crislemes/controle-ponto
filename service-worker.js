@@ -1,10 +1,12 @@
-const CACHE_NAME = 'controle-horas-v9';
+const CACHE_NAME = 'controle-horas-v10';
 
 const urlsToCache = [
   './',
   'index.html',
   'style.css',
   'script.js',
+  'firebase-config.js',
+  'firebase-integration.js',
   'manifest.json',
   'icons/icon-192.png',
   'icons/icon-512.png'
