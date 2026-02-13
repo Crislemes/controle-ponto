@@ -410,7 +410,8 @@ function gerarPDF() {
   }
 
   const nome = localStorage.getItem('nomeUsuario') || document.getElementById('nomeUsuario').value || 'Alessandro da Silva Ferreira';
-  const mesRef = document.getElementById('mesRelatorio').value; // formato YYYY-MM
+  const mesRef = document.getElementById('mesRelatorio').value; 
+  
   if (!mesRef) {
     alert('Selecione o mês do relatório.');
     return;
@@ -422,57 +423,114 @@ function gerarPDF() {
     return d.getFullYear() === ano && (d.getMonth() + 1) === mes;
   });
 
-  const totalMinutos = registrosMes.reduce((s, r) => s + (r.totalMinutos || 0), 0);
-  const totalExtrasMinutos = registrosMes.reduce((s, r) => s + (r.extrasMinutos || 0), 0);
-
+  // Inicialização do Documento
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const margin = 40;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const contentWidth = pageWidth - (margin * 2);
   let y = margin;
 
-  doc.setFontSize(16);
-  doc.text('Controle de Horas', doc.internal.pageSize.getWidth() / 2, y, { align: 'center' });
-  y += 30;
+  // Cabeçalho
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text('Controle de Horas', pageWidth / 2, y, { align: 'center' });
+  y += 35;
 
   doc.setFontSize(11);
+  doc.setFont(undefined, 'normal');
   doc.text(`Nome: ${nome}`, margin, y);
   y += 18;
+  
   const mesNome = new Date(ano, mes - 1).toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-  doc.text(`Mês de referência: ${mesNome}`, margin, y);
+  doc.text(`Mês de referência: ${mesNome.toUpperCase()}`, margin, y);
+  y += 25;
+
+  doc.setFont(undefined, 'bold');
+  doc.text('Registros Detalhados:', margin, y);
   y += 20;
 
-  doc.text('Registros:', margin, y);
-  y += 14;
-
   if (registrosMes.length === 0) {
-    doc.text('Nenhum registro para este mês.', margin, y);
+    doc.setFont(undefined, 'italic');
+    doc.text('Nenhum registro encontrado para este período.', margin, y);
   } else {
     doc.setFontSize(10);
+    
     registrosMes.forEach(r => {
-      if (y > doc.internal.pageSize.getHeight() - margin) {
+      // Cálculo de espaço: Se o Y estiver perto do fim da página, cria nova página
+      if (y > pageHeight - 80) {
         doc.addPage();
         y = margin;
       }
+
       const totalFormatado = formatarMinutosComNome(r.totalMinutos);
       const totalSemAlmocoFormatado = formatarMinutosComNome(calcularTotalSemAlmoco(r.totalMinutos));
       const extrasFormatado = formatarMinutosComNome(r.extrasMinutos);
       const extrasComSinal = r.extrasMinutos > 0 ? '+' + extrasFormatado : extrasFormatado;
-      const linha = `${formatarDataISOparaBr(r.data)} - ${r.entrada} às ${r.saida} — ${totalFormatado} (menos almoço: ${totalSemAlmocoFormatado}, extras: ${extrasComSinal})${r.observacao ? ' — ' + r.observacao : ''}`;
-      doc.text(linha, margin, y);
-      y += 14;
+
+      // Linha 1: Dados temporais (Negrito)
+      doc.setFont(undefined, 'bold');
+      const linhaPrincipal = `${formatarDataISOparaBr(r.data)} | ${r.entrada} às ${r.saida}`;
+      doc.text(linhaPrincipal, margin, y);
+      
+      // Linha 1: Totais (Alinhado à direita ou após o tempo)
+      doc.setFont(undefined, 'normal');
+      const infoHoras = `> Total: ${totalFormatado} (Líquido: ${totalSemAlmocoFormatado} | Extras: ${extrasComSinal})`;
+      doc.text(infoHoras, margin + 200, y); // Ajuste o 200 conforme necessário
+      y += 15;
+
+      // Linha 2: Observação com Quebra Automática
+      if (r.observacao) {
+        doc.setFont(undefined, 'italic');
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80); // Cor cinza para observação
+
+        const obsTexto = `Observação: ${r.observacao}`;
+        // O splitTextToSize quebra o texto em um array de linhas
+        const linhasObs = doc.splitTextToSize(obsTexto, contentWidth - 20);
+        
+        doc.text(linhasObs, margin + 10, y);
+        
+        // Incrementa Y baseado no número de linhas geradas
+        y += (linhasObs.length * 12);
+        
+        doc.setTextColor(0, 0, 0); // Volta para preto
+        doc.setFontSize(10);
+      }
+
+      y += 10; // Espaço entre registros
+      // Linha separadora discreta
+      doc.setDrawColor(230, 230, 230);
+      doc.line(margin, y - 5, pageWidth - margin, y - 5);
+      y += 5;
     });
   }
 
-  y += 10;
-  doc.setFontSize(12);
-  const totalFormatado = formatarMinutosComNome(totalMinutos);
-  const totalSemAlmocoFormatado = formatarMinutosComNome(registrosMes.reduce((s, r) => s + calcularTotalSemAlmoco(r.totalMinutos || 0), 0));
-  const totalExtrasFormatado = formatarMinutosComNome(totalExtrasMinutos);
-  const totalExtrasComSinal = totalExtrasMinutos > 0 ? '+' + totalExtrasFormatado : totalExtrasFormatado;
-  doc.text(`Total bruto no mês: ${totalFormatado}`, margin, y);
-  y += 15;
-  doc.text(`Total com desconto de almoço: ${totalSemAlmocoFormatado}`, margin, y);
-  y += 15;
-  doc.text(`Total de extras no mês: ${totalExtrasComSinal}`, margin, y);
+  // Rodapé com Totais Mensais
+  if (y > pageHeight - 100) { // Garante que os totais não fiquem órfãos em outra página
+    doc.addPage();
+    y = margin;
+  }
 
-  doc.save(`Controle-de-Horas-${ano}-${String(mes).padStart(2,'0')}.pdf`);
+  y += 20;
+  doc.setDrawColor(0, 0, 0);
+  doc.rect(margin, y, contentWidth, 65); // Quadro de resumo
+  y += 20;
+
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  
+  const totalMinutosMes = registrosMes.reduce((s, r) => s + (r.totalMinutos || 0), 0);
+  const totalSemAlmocoMes = registrosMes.reduce((s, r) => s + calcularTotalSemAlmoco(r.totalMinutos || 0), 0);
+  const totalExtrasMes = registrosMes.reduce((s, r) => s + (r.extrasMinutos || 0), 0);
+
+  doc.text(`Total Bruto: ${formatarMinutosComNome(totalMinutosMes)}`, margin + 15, y);
+  y += 18;
+  doc.text(`Total Líquido (Desc. Almoço): ${formatarMinutosComNome(totalSemAlmocoMes)}`, margin + 15, y);
+  y += 18;
+  const sinalFinal = totalExtrasMes > 0 ? '+' : '';
+  doc.text(`Saldo de Horas Extras: ${sinalFinal}${formatarMinutosComNome(totalExtrasMes)}`, margin + 15, y);
+
+  // Salvar
+  doc.save(`Relatorio-Horas-${nome.replace(/\s+/g, '-')}-${mesRef}.pdf`);
 }
